@@ -1,36 +1,86 @@
-# Spotify ML Studio
+# SongSage
 
-An end-to-end machine learning project built on the Spotify Tracks dataset.
+**Discover genres and find your next favorite track.**
 
-This project gives users two capabilities:
-1. Predict song genre from audio features
-2. Recommend similar songs from a selected track
+SongSage is an end-to-end machine learning project built on Spotify audio features.  
+It combines two practical capabilities in one product:
 
-Dataset: [Spotify Tracks Dataset (Kaggle)](https://www.kaggle.com/datasets/maharshipandya/spotify-tracks-dataset)
+- Genre prediction from song-level audio signals
+- Similar-song recommendation using nearest-neighbor similarity
 
-## What Users Get
+This project is designed like a production-ready ML application, with modular training code, artifact persistence, a FastAPI backend, and a polished Streamlit interface.
 
-- Multi-model genre classifier:
-  - Logistic Regression
-  - Random Forest
-  - SVM
-  - XGBoost (if installed)
-- Automatic model comparison and best-model selection
-- Recommendation engine using cosine similarity + nearest neighbors
-- FastAPI backend for API-based usage
-- Streamlit frontend for easy interactive usage
-- EDA notebook with core visualizations
+---
 
-## Project Layout
+## Why I Built This
+
+I wanted to move beyond a notebook-only ML prototype and build something people can actually use.
+
+SongSage reflects that goal:
+- clean project structure
+- reproducible training pipeline
+- explainable evaluation outputs
+- an interface that feels like a real product, not a demo script
+
+---
+
+## Dataset
+
+- **Source:** [Spotify Tracks Dataset (Kaggle)](https://www.kaggle.com/datasets/maharshipandya/spotify-tracks-dataset)
+- **Target Column:** `track_genre`
+- **Core audio features used:**
+  - `danceability`
+  - `energy`
+  - `loudness`
+  - `speechiness`
+  - `acousticness`
+  - `instrumentalness`
+  - `liveness`
+  - `valence`
+  - `tempo`
+
+Additional metadata/features are used where available (`popularity`, `duration_ms`, `explicit`, `key`, `mode`, `time_signature`).
+
+---
+
+## What SongSage Does
+
+### 1. Genre Classification
+Trains and compares multiple classifiers:
+- Logistic Regression
+- Random Forest
+- Support Vector Machine (SVM)
+- XGBoost (optional if available)
+
+Evaluation includes:
+- Accuracy
+- Precision
+- Recall
+- F1 Score
+- Confusion Matrix
+
+### 2. Song Recommendation
+Builds a recommendation engine using:
+- Standardized feature vectors
+- Nearest Neighbors with cosine similarity
+
+User can:
+- input a song name
+- receive top-k similar songs
+
+---
+
+## Project Structure
 
 ```text
 spotify_ml_project/
 ├── data/
-│   ├── raw/                     # Put Kaggle CSV here
+│   ├── raw/
 │   └── processed/
 ├── notebooks/
 │   └── exploratory_data_analysis.ipynb
 ├── src/
+│   ├── __init__.py
 │   ├── data_preprocessing.py
 │   ├── feature_engineering.py
 │   ├── train_model.py
@@ -38,161 +88,182 @@ spotify_ml_project/
 │   ├── recommendation_engine.py
 │   └── utils.py
 ├── models/
-│   └── saved_models/            # Trained artifacts + plots
+│   ├── deploy/                  # lightweight deployment artifacts
+│   ├── saved_model/             # legacy compatibility
+│   └── saved_models/            # full local training artifacts
 ├── api/
-│   ├── app.py                   # FastAPI app
-│   └── streamlit_app.py         # User-friendly frontend
+│   ├── app.py                   # FastAPI backend
+│   └── streamlit_app.py         # SongSage frontend
 ├── requirements.txt
 ├── README.md
 └── main.py
 ```
 
-## Quick Start (Recommended)
+---
 
-### 1. Setup
+## Local Setup
 
 ```bash
 cd /Users/pragatigodara/Documents/Playground/spotify_ml_project
 python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Add Dataset
+Place your dataset CSV in:
 
-Download Kaggle CSV and place it in:
+```text
+data/raw/
+```
 
-`/Users/pragatigodara/Documents/Playground/spotify_ml_project/data/raw`
+---
 
-### 3. Train Models
+## Train the System
 
 ```bash
 python main.py train
 ```
 
-Optional (bonus):
+Optional flags:
 
 ```bash
 python main.py train --k-best 10 --use-pca --tune
+python main.py train --data-csv /absolute/path/to/dataset.csv
 ```
 
-### 4. Run User Interface (Best for non-technical users)
+This step:
+- preprocesses data
+- trains classifier models
+- picks best model
+- saves evaluation artifacts
+- builds recommender artifacts
+- creates deploy-friendly artifacts in `models/deploy/`
+
+---
+
+## Run SongSage UI
 
 ```bash
 streamlit run api/streamlit_app.py
 ```
 
-Open the URL shown in terminal (usually `http://localhost:8501`).
+What users see:
+- **Genre Prediction** tab with guided feature controls
+- **Song Recommender** tab with top-k recommendations
+- **Model Insights** tab with charts and compact performance cards
 
-## Streamlit Screens
+---
 
-### Predict Genre
-- Input audio features using sliders
-- Click `Predict Genre`
-- See predicted class instantly
-
-### Recommend Songs
-- Select an existing song
-- Choose top-k recommendations
-- View similar songs in a table
-
-### Model Insights
-- See metrics for each algorithm
-- View model comparison plot
-- View confusion matrix for best model
-
-## API Usage
-
-Run API:
+## Run API
 
 ```bash
 uvicorn api.app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Swagger UI:
+Swagger docs:
 
-`http://127.0.0.1:8000/docs`
-
-### Endpoint: `POST /predict-genre`
-
-Example payload:
-
-```json
-{
-  "danceability": 0.72,
-  "energy": 0.81,
-  "loudness": -5.1,
-  "speechiness": 0.04,
-  "acousticness": 0.10,
-  "instrumentalness": 0.00,
-  "liveness": 0.12,
-  "valence": 0.74,
-  "tempo": 122.5,
-  "popularity": 80,
-  "duration_ms": 203000,
-  "explicit": 0,
-  "key": 5,
-  "mode": 1,
-  "time_signature": 4
-}
+```text
+http://127.0.0.1:8000/docs
 ```
 
-### Endpoint: `POST /recommend`
+### Key Endpoints
 
+#### `POST /predict-genre`
+Input: audio feature JSON  
+Output: predicted genre label
+
+#### `POST /recommend`
+Input:
 ```json
 {
   "song_name": "Blinding Lights",
   "top_k": 5
 }
 ```
+Output: top similar songs
 
-### Endpoint: `POST /recommend-by-features`
+#### `POST /recommend-by-features`
+Input: custom feature vector  
+Output: top similar songs
 
-```json
-{
-  "features": {
-    "danceability": 0.72,
-    "energy": 0.81,
-    "loudness": -5.1,
-    "speechiness": 0.04,
-    "acousticness": 0.10,
-    "instrumentalness": 0.00,
-    "liveness": 0.12,
-    "valence": 0.74,
-    "tempo": 122.5
-  },
-  "top_k": 5
-}
+---
+
+## Model Artifacts
+
+### Deployment-ready artifacts
+Stored in:
+
+```text
+models/deploy/
 ```
 
-## Output Artifacts
-
-After training, these are generated in `models/saved_models/`:
-
+Includes:
 - `best_genre_model.joblib`
 - `song_recommender.joblib`
 - `all_model_metrics.json`
 - `model_comparison.png`
 - `best_model_confusion_matrix.png`
 
+---
+
+## Deployment Notes (Streamlit Cloud)
+
+For successful deployment:
+- ensure `models/deploy/*` files are committed and pushed
+- set app entry point to:
+  - `api/streamlit_app.py`
+- reboot app after each push
+
+If you see "Model artifacts are missing", check whether deploy artifacts exist in GitHub repo, not just locally.
+
+---
+
+## Engineering Highlights
+
+- Modular Python code with type hints and docstrings
+- Reusable preprocessing + feature engineering pipeline
+- Automated model comparison and artifact persistence
+- API + UI separation for clean product architecture
+- Backward-compatible artifact path resolution (`deploy`, `saved_models`, `saved_model`)
+
+---
+
 ## EDA Notebook
 
-Use:
+Open:
 
-`/Users/pragatigodara/Documents/Playground/spotify_ml_project/notebooks/exploratory_data_analysis.ipynb`
+```text
+notebooks/exploratory_data_analysis.ipynb
+```
 
 Includes:
-- Genre distribution
-- Audio feature distributions
-- Correlation heatmap
-- Feature importance chart
+- genre distribution
+- audio feature distributions
+- correlation heatmap
+- feature importance analysis
 
-## Troubleshooting
+---
 
-- `Model artifact not found`:
-  - Run `python main.py train`
-- `Song not found` in recommendation:
-  - Use exact title from dataset
-- XGBoost import failure:
-  - Pipeline still runs with remaining models
+## Current Limitations
 
+- Genre prediction is a high-class, imbalanced task; baseline performance is expectedly moderate.
+- Confusion matrix can be visually dense due to many genres.
+- Recommendation quality depends on feature similarity, not user listening history.
+
+---
+
+## Next Improvements
+
+- stronger model tuning and class balancing
+- top-k genre confidence outputs
+- cleaner reduced-label confusion visualization
+- richer recommendation ranking (hybrid similarity + popularity signals)
+- CI checks and containerized deployment
+
+---
+
+## Author Note
+
+Built with intent to feel both **engineering-grade** and **user-friendly**.
+
+If you use this project, I recommend treating it as a strong baseline for a real music intelligence product and iterating on model quality + UX together.
