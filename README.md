@@ -5,7 +5,7 @@ Predict song genres and discover similar tracks using audio features.
 SongSage is an end-to-end machine learning project built on Spotify audio features.
 It combines two practical capabilities in a single application:
 
-• **Genre prediction** from song-level audio signals.
+• **Genre prediction** from song-level audio signals.<br>
 • **Song recommendation** using nearest-neighbor similarity.
 
 The project is designed like a **production-style ML system**, including modular training code, model artifact persistence, a FastAPI backend, and an interactive Streamlit interface.
