@@ -227,6 +227,8 @@ if bundle is None or recommender is None:
 best_name = max(metrics, key=lambda m: metrics[m]["f1"]) if metrics else "unknown"
 best_f1 = f"{metrics[best_name]['f1']:.3f}" if metrics else "N/A"
 best_accuracy = f"{metrics[best_name]['accuracy']:.3f}" if metrics else "N/A"
+best_precision = f"{metrics[best_name]['precision']:.3f}" if metrics else "N/A"
+best_recall = f"{metrics[best_name]['recall']:.3f}" if metrics else "N/A"
 best_model_label = humanize_model_name(best_name)
 
 tab1, tab2, tab3 = st.tabs(["Genre Prediction", "Song Recommender", "Model Insights"])
@@ -322,29 +324,72 @@ with tab2:
 with tab3:
     st.markdown('<h3 class="section-title">Model Insights</h3>', unsafe_allow_html=True)
     st.markdown(
-        '<p class="small-note">Compare all trained models and inspect saved evaluation charts.</p>',
+        '<p class="small-note">Inspect evaluation charts and final model performance.</p>',
         unsafe_allow_html=True,
     )
-
-    if metrics:
-        rows = []
-        for model_name, vals in metrics.items():
-            rows.append(
-                {
-                    "Model": model_name,
-                    "Accuracy": round(vals["accuracy"], 4),
-                    "Precision": round(vals["precision"], 4),
-                    "Recall": round(vals["recall"], 4),
-                    "F1": round(vals["f1"], 4),
-                }
-            )
-        st.dataframe(
-            pd.DataFrame(rows).sort_values("F1", ascending=False),
-            use_container_width=True,
-            hide_index=True,
+    row1c1, row1c2, row1c3 = st.columns(3)
+    with row1c1:
+        st.markdown(
+            f"""
+<div class="metric-card">
+  <div class="metric-label">Model</div>
+  <div class="metric-value">{best_model_label}</div>
+</div>
+""",
+            unsafe_allow_html=True,
         )
-    else:
-        st.info("Metrics file not found. Train once to generate evaluation metrics.")
+    with row1c2:
+        st.markdown(
+            f"""
+<div class="metric-card">
+  <div class="metric-label">Accuracy</div>
+  <div class="metric-value">{(float(best_accuracy) * 100):.1f}%</div>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+    with row1c3:
+        st.markdown(
+            f"""
+<div class="metric-card">
+  <div class="metric-label">F1 Score</div>
+  <div class="metric-value">{best_f1}</div>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+    row2c1, row2c2, row2c3 = st.columns(3)
+    with row2c1:
+        st.markdown(
+            f"""
+<div class="metric-card">
+  <div class="metric-label">Precision</div>
+  <div class="metric-value">{best_precision}</div>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+    with row2c2:
+        st.markdown(
+            f"""
+<div class="metric-card">
+  <div class="metric-label">Recall</div>
+  <div class="metric-value">{best_recall}</div>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+    with row2c3:
+        st.markdown(
+            """
+<div class="metric-card">
+  <div class="metric-label">Dataset</div>
+  <div class="metric-value">Spotify Tracks Dataset</div>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
 
     plot_col1, plot_col2 = st.columns(2)
     with plot_col1:
@@ -365,46 +410,3 @@ with tab3:
             )
         else:
             st.info("Confusion matrix plot not found.")
-
-st.markdown("### Model Performance")
-p1, p2, p3, p4 = st.columns(4)
-with p1:
-    st.markdown(
-        f"""
-<div class="metric-card">
-  <div class="metric-label">Best Model</div>
-  <div class="metric-value">{best_model_label}</div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
-with p2:
-    st.markdown(
-        f"""
-<div class="metric-card">
-  <div class="metric-label">Accuracy</div>
-  <div class="metric-value">{(float(best_accuracy) * 100):.1f}%</div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
-with p3:
-    st.markdown(
-        f"""
-<div class="metric-card">
-  <div class="metric-label">F1 Score</div>
-  <div class="metric-value">{best_f1}</div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
-with p4:
-    st.markdown(
-        """
-<div class="metric-card">
-  <div class="metric-label">Dataset</div>
-  <div class="metric-value">Spotify Tracks Dataset</div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
