@@ -154,5 +154,8 @@ Includes:
 - `best_model_confusion_matrix.png`
 
 ## Author
-
 **Pragati Godara**
+
+## License
+**MIT License**
+
