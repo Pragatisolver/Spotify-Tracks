@@ -17,6 +17,7 @@ if str(ROOT) not in sys.path:
 from src.recommendation_engine import SongRecommender
 from src.utils import load_joblib
 
+
 def resolve_artifact_path(filename: str) -> Path:
     """Support both saved_models and legacy saved_model directories."""
     candidate_dirs = [
@@ -38,7 +39,7 @@ PLOT_MODEL_COMPARE = resolve_artifact_path("model_comparison.png")
 PLOT_CONFUSION = resolve_artifact_path("best_model_confusion_matrix.png")
 
 st.set_page_config(
-    page_title="Spotify ML Studio",
+    page_title="SongSage",
     page_icon="🎧",
     layout="wide",
 )
@@ -74,6 +75,19 @@ st.markdown(
     border-radius: 14px;
     padding: 0.8rem 1rem;
     background: #ffffff;
+}
+.metric-label {
+    color: #475569;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.metric-value {
+    color: #0f172a;
+    font-size: 1.05rem;
+    font-weight: 700;
 }
 .section-title {
     margin-top: 0.2rem;
@@ -163,7 +177,6 @@ AUDIO_PRESETS: dict[str, dict[str, float]] = {
 }
 
 
-
 def predict_genre(bundle: dict[str, Any], values: dict[str, float]) -> str:
     feature_columns = bundle["feature_columns"]
     selected_feature_names = bundle["selected_feature_names"]
@@ -187,11 +200,17 @@ def predict_genre(bundle: dict[str, Any], values: dict[str, float]) -> str:
     return str(label_encoder.inverse_transform(pred)[0])
 
 
+def humanize_model_name(name: str) -> str:
+    """Convert snake_case model names to readable labels."""
+    cleaned = name.replace("_deploy", "").replace("_", " ").strip()
+    return cleaned.title()
+
+
 st.markdown(
     """
 <div class="hero">
-  <h1>Spotify ML Studio</h1>
-  <p>Predict genre from audio signals and discover similar tracks with an interactive music intelligence dashboard.</p>
+  <h1>SongSage</h1>
+  <p>Predict song genres and discover similar tracks using audio features.</p>
 </div>
 """,
     unsafe_allow_html=True,
@@ -208,25 +227,14 @@ if bundle is None or recommender is None:
 best_name = max(metrics, key=lambda m: metrics[m]["f1"]) if metrics else "unknown"
 best_f1 = f"{metrics[best_name]['f1']:.3f}" if metrics else "N/A"
 best_accuracy = f"{metrics[best_name]['accuracy']:.3f}" if metrics else "N/A"
-
-c1, c2, c3 = st.columns(3)
-with c1:
-    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-    st.metric("Selected Genre Model", str(bundle.get("model_name", "unknown")))
-    st.markdown('</div>', unsafe_allow_html=True)
-with c2:
-    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-    st.metric("Best F1 Score", best_f1)
-    st.markdown('</div>', unsafe_allow_html=True)
-with c3:
-    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-    st.metric("Best Accuracy", best_accuracy)
-    st.markdown('</div>', unsafe_allow_html=True)
+best_model_label = humanize_model_name(best_name)
 
 tab1, tab2, tab3 = st.tabs(["Genre Prediction", "Song Recommender", "Model Insights"])
 
 with tab1:
-    st.markdown('<h3 class="section-title">Genre Prediction</h3>', unsafe_allow_html=True)
+    st.markdown(
+        '<h3 class="section-title">Genre Prediction</h3>', unsafe_allow_html=True
+    )
     st.caption("Use the preset for a quick demo, or adjust each control manually.")
 
     preset_col, _ = st.columns([1, 2])
@@ -236,13 +244,19 @@ with tab1:
 
     left, middle, right = st.columns(3)
     with left:
-        danceability = st.slider("Danceability", 0.0, 1.0, float(preset["danceability"]))
+        danceability = st.slider(
+            "Danceability", 0.0, 1.0, float(preset["danceability"])
+        )
         energy = st.slider("Energy", 0.0, 1.0, float(preset["energy"]))
         loudness = st.slider("Loudness", -60.0, 5.0, float(preset["loudness"]))
         speechiness = st.slider("Speechiness", 0.0, 1.0, float(preset["speechiness"]))
-        acousticness = st.slider("Acousticness", 0.0, 1.0, float(preset["acousticness"]))
+        acousticness = st.slider(
+            "Acousticness", 0.0, 1.0, float(preset["acousticness"])
+        )
     with middle:
-        instrumentalness = st.slider("Instrumentalness", 0.0, 1.0, float(preset["instrumentalness"]))
+        instrumentalness = st.slider(
+            "Instrumentalness", 0.0, 1.0, float(preset["instrumentalness"])
+        )
         liveness = st.slider("Liveness", 0.0, 1.0, float(preset["liveness"]))
         valence = st.slider("Valence", 0.0, 1.0, float(preset["valence"]))
         tempo = st.slider("Tempo", 40.0, 240.0, float(preset["tempo"]))
@@ -276,7 +290,9 @@ with tab1:
         st.success(f"Predicted Genre: **{genre}**")
 
 with tab2:
-    st.markdown('<h3 class="section-title">Song Recommender</h3>', unsafe_allow_html=True)
+    st.markdown(
+        '<h3 class="section-title">Song Recommender</h3>', unsafe_allow_html=True
+    )
     st.caption("Search by title/artist, then generate top similar songs.")
 
     catalog = recommender.catalog if recommender.catalog is not None else pd.DataFrame()
@@ -296,14 +312,19 @@ with tab2:
                 st.success(f"Top {len(recs)} recommendations for: **{song_name}**")
                 result_df = pd.DataFrame(recs)
                 if not result_df.empty and "similarity_score" in result_df.columns:
-                    result_df["similarity_score"] = result_df["similarity_score"].round(4)
+                    result_df["similarity_score"] = result_df["similarity_score"].round(
+                        4
+                    )
                 st.dataframe(result_df, use_container_width=True, hide_index=True)
             except ValueError as err:
                 st.error(str(err))
 
 with tab3:
     st.markdown('<h3 class="section-title">Model Insights</h3>', unsafe_allow_html=True)
-    st.markdown('<p class="small-note">Compare all trained models and inspect saved evaluation charts.</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="small-note">Compare all trained models and inspect saved evaluation charts.</p>',
+        unsafe_allow_html=True,
+    )
 
     if metrics:
         rows = []
@@ -328,11 +349,62 @@ with tab3:
     plot_col1, plot_col2 = st.columns(2)
     with plot_col1:
         if PLOT_MODEL_COMPARE.exists():
-            st.image(str(PLOT_MODEL_COMPARE), caption="Model Comparison", use_container_width=True)
+            st.image(
+                str(PLOT_MODEL_COMPARE),
+                caption="Model Comparison",
+                use_container_width=True,
+            )
         else:
             st.info("Model comparison plot not found.")
     with plot_col2:
         if PLOT_CONFUSION.exists():
-            st.image(str(PLOT_CONFUSION), caption="Best Model Confusion Matrix", use_container_width=True)
+            st.image(
+                str(PLOT_CONFUSION),
+                caption="Best Model Confusion Matrix",
+                use_container_width=True,
+            )
         else:
             st.info("Confusion matrix plot not found.")
+
+st.markdown("### Model Performance")
+p1, p2, p3, p4 = st.columns(4)
+with p1:
+    st.markdown(
+        f"""
+<div class="metric-card">
+  <div class="metric-label">Best Model</div>
+  <div class="metric-value">{best_model_label}</div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+with p2:
+    st.markdown(
+        f"""
+<div class="metric-card">
+  <div class="metric-label">Accuracy</div>
+  <div class="metric-value">{(float(best_accuracy) * 100):.1f}%</div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+with p3:
+    st.markdown(
+        f"""
+<div class="metric-card">
+  <div class="metric-label">F1 Score</div>
+  <div class="metric-value">{best_f1}</div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+with p4:
+    st.markdown(
+        """
+<div class="metric-card">
+  <div class="metric-label">Dataset</div>
+  <div class="metric-value">Spotify Tracks Dataset</div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
