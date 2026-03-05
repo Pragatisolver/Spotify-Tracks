@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+data/raw/*.csv
+data/processed/*.csv
+
+models/saved_model/
+models/saved_models/*.joblib
+models/saved_models/*.png
+models/saved_models/*.json
