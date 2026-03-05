@@ -40,7 +40,8 @@ def save_joblib(obj: Any, file_path: os.PathLike[str] | str) -> Path:
     """Persist a Python object with joblib."""
     path = Path(file_path)
     ensure_directory(path.parent)
-    joblib.dump(obj, path)
+    # Compression keeps deployment artifacts much smaller.
+    joblib.dump(obj, path, compress=3)
     return path
 
 

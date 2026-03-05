@@ -191,3 +191,56 @@ def train_pipeline(
         "comparison_plot": str(comparison_plot_path),
         "confusion_matrix_plot": str(confusion_path),
     }
+
+
+def train_deploy_pipeline(
+    raw_data_path: Path | None = None,
+    data_dir: Path = Path("data"),
+    deploy_dir: Path = Path("models/deploy"),
+    test_size: float = 0.2,
+    k_best: int = 10,
+) -> dict[str, Any]:
+    """Train a lightweight deployment-friendly classifier artifact."""
+    ensure_directory(deploy_dir)
+
+    preprocessed = run_preprocessing(
+        raw_data_path=raw_data_path,
+        raw_dir=data_dir / "raw",
+        processed_dir=data_dir / "processed",
+        test_size=test_size,
+    )
+
+    engineered = build_features(
+        X_train=preprocessed.X_train,
+        X_test=preprocessed.X_test,
+        y_train=preprocessed.y_train,
+        y_test=preprocessed.y_test,
+        k_best=k_best,
+        use_pca=False,
+    )
+
+    model = LogisticRegression(max_iter=2000, n_jobs=None)
+    model.fit(engineered.X_train, engineered.y_train)
+    pred = pd.Series(model.predict(engineered.X_test), index=engineered.X_test.index)
+    metrics = evaluate_classification(engineered.y_test, pred)
+
+    artifact = {
+        "model": model,
+        "model_name": "logistic_regression_deploy",
+        "feature_columns": preprocessed.feature_columns,
+        "selected_feature_names": engineered.artifacts.selected_feature_names,
+        "scaler": engineered.artifacts.scaler,
+        "pca": None,
+        "label_encoder": engineered.artifacts.label_encoder,
+        "metrics": metrics,
+    }
+
+    model_path = save_joblib(artifact, deploy_dir / "best_genre_model.joblib")
+    save_json({"logistic_regression_deploy": metrics}, deploy_dir / "all_model_metrics.json")
+    logger.info("Deployment model saved: %s", model_path)
+
+    return {
+        "deploy_model": "logistic_regression_deploy",
+        "deploy_model_path": str(model_path),
+        "metrics": metrics,
+    }

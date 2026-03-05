@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 
 from src.recommendation_engine import SongRecommender, build_and_save_recommender
-from src.train_model import train_pipeline
+from src.train_model import train_deploy_pipeline, train_pipeline
 from src.utils import load_joblib, setup_logger
 
 logger = setup_logger(__name__)
@@ -40,6 +40,24 @@ def sync_legacy_model_dir(root: Path) -> None:
     ]:
         src = source_dir / file_name
         dst = legacy_dir / file_name
+        if src.exists():
+            shutil.copy2(src, dst)
+
+
+def sync_deploy_dir(root: Path) -> None:
+    """Sync recommender/plots to deploy directory."""
+    deploy_dir = root / "models" / "deploy"
+    deploy_dir.mkdir(parents=True, exist_ok=True)
+    source_dir = root / "models" / "saved_models"
+
+    for file_name in [
+        "song_recommender.joblib",
+        "all_model_metrics.json",
+        "model_comparison.png",
+        "best_model_confusion_matrix.png",
+    ]:
+        src = source_dir / file_name
+        dst = deploy_dir / file_name
         if src.exists():
             shutil.copy2(src, dst)
 
@@ -85,10 +103,17 @@ def run_train(args: argparse.Namespace) -> None:
         raw_dir=root / "data" / "raw",
         output_path=root / "models" / "saved_models" / "song_recommender.joblib",
     )
+    deploy_summary = train_deploy_pipeline(
+        raw_data_path=data_csv,
+        data_dir=root / "data",
+        deploy_dir=root / "models" / "deploy",
+    )
     sync_legacy_model_dir(root)
+    sync_deploy_dir(root)
 
     logger.info("Training completed. Best model: %s", summary["best_model"])
     logger.info("Recommender saved at: %s", recommender_path)
+    logger.info("Deploy-friendly model: %s", deploy_summary["deploy_model_path"])
 
 
 def run_recommend(args: argparse.Namespace) -> None:

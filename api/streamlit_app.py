@@ -20,6 +20,7 @@ from src.utils import load_joblib
 def resolve_artifact_path(filename: str) -> Path:
     """Support both saved_models and legacy saved_model directories."""
     candidate_dirs = [
+        ROOT / "models" / "deploy",
         ROOT / "models" / "saved_models",
         ROOT / "models" / "saved_model",
     ]

@@ -21,6 +21,7 @@ app = FastAPI(title="Spotify Genre Classification & Recommendation API")
 def resolve_artifact_path(filename: str) -> Path:
     """Support both saved_models and legacy saved_model directories."""
     candidate_dirs = [
+        ROOT_DIR / "models" / "deploy",
         ROOT_DIR / "models" / "saved_models",
         ROOT_DIR / "models" / "saved_model",
     ]
