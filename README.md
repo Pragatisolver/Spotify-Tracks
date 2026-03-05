@@ -2,268 +2,110 @@
 
 **Discover genres and find your next favorite track.**
 
-SongSage is an end-to-end machine learning project built on Spotify audio features.  
-It combines two practical capabilities in one product:
+Live Demo: [https://gax4gvgkau3ey3dyza5uiz.streamlit.app](https://gax4gvgkau3ey3dyza5uiz.streamlit.app)  
+Built by **Pragati**
 
-- Genre prediction from song-level audio signals
-- Similar-song recommendation using nearest-neighbor similarity
+SongSage is an end-to-end ML application that predicts music genres from audio features and recommends similar tracks. The project is built with production-style structure: modular pipelines, persisted artifacts, API endpoints, and a user-facing web app.
 
-This project is designed like a production-ready ML application, with modular training code, artifact persistence, a FastAPI backend, and a polished Streamlit interface.
+## Project Impact
 
----
+- Built and deployed a complete ML product from dataset to live web app.
+- Implemented multi-model genre classification and selected best model with weighted F1.
+- Added a similarity-based recommendation engine for top-k track suggestions.
+- Designed a clean Streamlit interface for non-technical users.
+- Exposed model capabilities through FastAPI for service integration.
 
-## Why I Built This
+## Features
 
-I wanted to move beyond a notebook-only ML prototype and build something people can actually use.
+- Genre prediction from audio inputs
+- Similar song recommendation by track name
+- Model performance insights (Accuracy, Precision, Recall, F1)
+- Deployment-ready artifact strategy (`models/deploy`)
 
-SongSage reflects that goal:
-- clean project structure
-- reproducible training pipeline
-- explainable evaluation outputs
-- an interface that feels like a real product, not a demo script
+## Tech Stack
 
----
+- Python
+- Pandas, NumPy
+- scikit-learn, XGBoost
+- FastAPI, Uvicorn
+- Streamlit
+- Matplotlib, Seaborn
+- Joblib
 
 ## Dataset
 
-- **Source:** [Spotify Tracks Dataset (Kaggle)](https://www.kaggle.com/datasets/maharshipandya/spotify-tracks-dataset)
-- **Target Column:** `track_genre`
-- **Core audio features used:**
-  - `danceability`
-  - `energy`
-  - `loudness`
-  - `speechiness`
-  - `acousticness`
-  - `instrumentalness`
-  - `liveness`
-  - `valence`
-  - `tempo`
+- Spotify Tracks Dataset (Kaggle): [Link](https://www.kaggle.com/datasets/maharshipandya/spotify-tracks-dataset)
+- Target: `track_genre`
+- Key features: `danceability`, `energy`, `loudness`, `speechiness`, `acousticness`, `instrumentalness`, `liveness`, `valence`, `tempo`
 
-Additional metadata/features are used where available (`popularity`, `duration_ms`, `explicit`, `key`, `mode`, `time_signature`).
-
----
-
-## What SongSage Does
-
-### 1. Genre Classification
-Trains and compares multiple classifiers:
-- Logistic Regression
-- Random Forest
-- Support Vector Machine (SVM)
-- XGBoost (optional if available)
-
-Evaluation includes:
-- Accuracy
-- Precision
-- Recall
-- F1 Score
-- Confusion Matrix
-
-### 2. Song Recommendation
-Builds a recommendation engine using:
-- Standardized feature vectors
-- Nearest Neighbors with cosine similarity
-
-User can:
-- input a song name
-- receive top-k similar songs
-
----
-
-## Project Structure
+## Repository Structure
 
 ```text
 spotify_ml_project/
+├── api/
+│   ├── app.py
+│   └── streamlit_app.py
 ├── data/
 │   ├── raw/
 │   └── processed/
+├── models/
+│   ├── deploy/
+│   ├── saved_model/
+│   └── saved_models/
 ├── notebooks/
 │   └── exploratory_data_analysis.ipynb
 ├── src/
-│   ├── __init__.py
 │   ├── data_preprocessing.py
-│   ├── feature_engineering.py
-│   ├── train_model.py
 │   ├── evaluate_model.py
+│   ├── feature_engineering.py
 │   ├── recommendation_engine.py
+│   ├── train_model.py
 │   └── utils.py
-├── models/
-│   ├── deploy/                  # lightweight deployment artifacts
-│   ├── saved_model/             # legacy compatibility
-│   └── saved_models/            # full local training artifacts
-├── api/
-│   ├── app.py                   # FastAPI backend
-│   └── streamlit_app.py         # SongSage frontend
+├── main.py
 ├── requirements.txt
-├── README.md
-└── main.py
+└── README.md
 ```
 
----
-
-## Local Setup
+## Run Locally
 
 ```bash
 cd /Users/pragatigodara/Documents/Playground/spotify_ml_project
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Place your dataset CSV in:
-
-```text
-data/raw/
-```
-
----
-
-## Train the System
+Place dataset CSV in `data/raw/`, then train:
 
 ```bash
 python main.py train
 ```
 
-Optional flags:
-
-```bash
-python main.py train --k-best 10 --use-pca --tune
-python main.py train --data-csv /absolute/path/to/dataset.csv
-```
-
-This step:
-- preprocesses data
-- trains classifier models
-- picks best model
-- saves evaluation artifacts
-- builds recommender artifacts
-- creates deploy-friendly artifacts in `models/deploy/`
-
----
-
-## Run SongSage UI
+Run UI:
 
 ```bash
 streamlit run api/streamlit_app.py
 ```
 
-What users see:
-- **Genre Prediction** tab with guided feature controls
-- **Song Recommender** tab with top-k recommendations
-- **Model Insights** tab with charts and compact performance cards
-
----
-
-## Run API
+Run API:
 
 ```bash
 uvicorn api.app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Swagger docs:
+## API Endpoints
 
-```text
-http://127.0.0.1:8000/docs
-```
+- `POST /predict-genre` -> predicts genre from audio features
+- `POST /recommend` -> returns top-k similar songs for an input song
+- `POST /recommend-by-features` -> returns similar songs from custom feature vector
 
-### Key Endpoints
+## Deployment Notes
 
-#### `POST /predict-genre`
-Input: audio feature JSON  
-Output: predicted genre label
+- Streamlit entrypoint: `api/streamlit_app.py`
+- Commit deploy artifacts in `models/deploy/`
+- If artifacts are missing in cloud runtime, the app cannot load models
 
-#### `POST /recommend`
-Input:
-```json
-{
-  "song_name": "Blinding Lights",
-  "top_k": 5
-}
-```
-Output: top similar songs
+## Author
 
-#### `POST /recommend-by-features`
-Input: custom feature vector  
-Output: top similar songs
-
----
-
-## Model Artifacts
-
-### Deployment-ready artifacts
-Stored in:
-
-```text
-models/deploy/
-```
-
-Includes:
-- `best_genre_model.joblib`
-- `song_recommender.joblib`
-- `all_model_metrics.json`
-- `model_comparison.png`
-- `best_model_confusion_matrix.png`
-
----
-
-## Deployment Notes (Streamlit Cloud)
-
-For successful deployment:
-- ensure `models/deploy/*` files are committed and pushed
-- set app entry point to:
-  - `api/streamlit_app.py`
-- reboot app after each push
-
-If you see "Model artifacts are missing", check whether deploy artifacts exist in GitHub repo, not just locally.
-
----
-
-## Engineering Highlights
-
-- Modular Python code with type hints and docstrings
-- Reusable preprocessing + feature engineering pipeline
-- Automated model comparison and artifact persistence
-- API + UI separation for clean product architecture
-- Backward-compatible artifact path resolution (`deploy`, `saved_models`, `saved_model`)
-
----
-
-## EDA Notebook
-
-Open:
-
-```text
-notebooks/exploratory_data_analysis.ipynb
-```
-
-Includes:
-- genre distribution
-- audio feature distributions
-- correlation heatmap
-- feature importance analysis
-
----
-
-## Current Limitations
-
-- Genre prediction is a high-class, imbalanced task; baseline performance is expectedly moderate.
-- Confusion matrix can be visually dense due to many genres.
-- Recommendation quality depends on feature similarity, not user listening history.
-
----
-
-## Next Improvements
-
-- stronger model tuning and class balancing
-- top-k genre confidence outputs
-- cleaner reduced-label confusion visualization
-- richer recommendation ranking (hybrid similarity + popularity signals)
-- CI checks and containerized deployment
-
----
-
-## Author Note
-
-Built with intent to feel both **engineering-grade** and **user-friendly**.
-
-If you use this project, I recommend treating it as a strong baseline for a real music intelligence product and iterating on model quality + UX together.
+**Pragati**  
+ML Engineer | Building practical, deployable machine learning systems.
