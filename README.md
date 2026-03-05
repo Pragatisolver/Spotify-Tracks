@@ -1,24 +1,43 @@
 # SongSage 🎧
 
-Predict song genres and discover similar tracks using audio features.
+**Predict song genres and discover similar tracks using Spotify audio features.**
 
-SongSage is an end-to-end machine learning project built on Spotify audio features.
-It combines two practical capabilities in a single application:
+SongSage is an **end-to-end machine learning application** built using Spotify audio feature data.  
+It combines **genre classification** and **song recommendation** into a single interactive system.
 
-• **Genre prediction** from song-level audio signals.<br>
-• **Song recommendation** using nearest-neighbor similarity.
+The project is designed like a **production-style ML product**, featuring:
 
-The project is designed like a **production-style ML system**, including modular training code, model artifact persistence, a FastAPI backend, and an interactive Streamlit interface.
+- modular training pipelines  
+- saved model artifacts  
+- FastAPI backend  
+- interactive Streamlit frontend  
+
+---
 
 ## Live Demo
 
-[https://gax4gvgkau3ey3dyza5uiz.streamlit.app](https://gax4gvgkau3ey3dyza5uiz.streamlit.app)
+🔗 **Try the App:**  
+https://gax4gvgkau3ey3dyza5uiz.streamlit.app
+
+---
 
 ## Core Features
 
-- **Genre Prediction** from song-level audio features
-- **Song Recommendation** using nearest neighbors + cosine similarity
-- **Model Insights** with core performance metrics and evaluation charts
+- ### Genre Prediction
+    Predict the **genre of a song** using Spotify audio features such as:
+    `danceability`, `energy`, `loudness`, `speechiness`, `acousticness`,  
+    `instrumentalness`, `liveness`, `valence`, `tempo`.
+
+
+- ### Song Recommendation
+    Recommend **similar songs** using audio feature similarity.
+
+    The system uses:
+    `Standardized feature vectors` ,`Nearest Neighbors search` ,`cosine similarity ranking`.
+
+
+- ### Model Insights 
+     With core performance metrics and evaluation charts
 
 ## Dataset
 
